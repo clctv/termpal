@@ -1,7 +1,7 @@
 type RGB = [number, number, number]
 type ColorInput = string | RGB
 
-export const ANSI_INDEX_MAP = {
+const ANSI_INDEX_MAP = {
   black: 0,
   red: 1,
   green: 2,
@@ -21,6 +21,29 @@ export const ANSI_INDEX_MAP = {
 } as const
 
 export type ThemeKey = keyof typeof ANSI_INDEX_MAP
+export type ThemeConfig = Partial<Record<ThemeKey, ColorInput>>
+
+export const BUILTIN_THEMES = {
+  Catppuccin: {
+    black: '#1e1e2e',
+    red: '#f38ba8',
+    green: '#a6e3a1',
+    yellow: '#f9e2af',
+    blue: '#89b4fa',
+    magenta: '#ee90db',
+    cyan: '#94e2d5',
+    white: '#cdd6f4',
+    gray: '#6c7086',
+    redBright: '#eba0ac',
+    greenBright: '#b4e4b3',
+    yellowBright: '#fab387',
+    blueBright: '#b4befe',
+    magentaBright: '#f5c2e7',
+    cyanBright: '#89dceb',
+    whiteBright: '#f5e0dc',
+  },
+} as const satisfies Record<string, ThemeConfig>
+export type BuiltinThemeName = keyof typeof BUILTIN_THEMES
 
 export class TermPalette {
   private isSupported: boolean
@@ -67,7 +90,7 @@ export class TermPalette {
     return this
   }
 
-  setTheme(theme: Partial<Record<ThemeKey, ColorInput>>): this {
+  setTheme(theme: ThemeConfig): this {
     if (!this.isSupported) return this
 
     const entries = Object.entries(theme)
@@ -87,6 +110,12 @@ export class TermPalette {
     }
 
     return this
+  }
+
+  use(themeName: BuiltinThemeName): this {
+    const theme = BUILTIN_THEMES[themeName]
+    if (!theme) return this
+    return this.setTheme(theme)
   }
 }
 

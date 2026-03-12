@@ -24,13 +24,21 @@ import { palette } from 'termpal'
 palette.setColor('red', '#ff0000')
 ```
 
+## 🎨 Built-in Theme
+
+```ts
+import { palette } from 'termpal'
+
+palette.use('Catppuccin')
+```
+
 ## 🎛️ Set Multiple Colors
 
 ```ts
 palette.setTheme({
-  red: '#F38BA8',
-  green: '#A6E3A1',
-  yellow: '#F9E2AF',
+  red: '#f38ba8',
+  green: '#a6e3a1',
+  yellow: '#f9e2af',
 })
 ```
 
@@ -115,13 +123,13 @@ Support may vary across terminals.
 
 ```ts
 palette.setTheme({
-  red: '#F38BA8',
-  green: '#A6E3A1',
-  yellow: '#F9E2AF',
-  blue: '#89B4FA',
-  magenta: '#EE90DB',
-  cyan: '#89DCEB',
-  gray: '#6C7086',
+  red: '#f38ba8',
+  green: '#a6e3a1',
+  yellow: '#f9e2af',
+  blue: '#89b4fa',
+  magenta: '#ee90db',
+  cyan: '#94e2d5',
+  gray: '#6c7086',
 })
 ```
 
