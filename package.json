@@ -15,7 +15,7 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "release": "release-it --only-version",
+    "release": "pnpm run build && release-it --only-version",
     "prepare": "husky"
   },
   "devDependencies": {
