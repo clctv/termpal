@@ -50,17 +50,17 @@ export class TermPalette {
   }
 
   private resolveIndex(key: ThemeKey): number {
-    if (typeof key === 'string' && key in ANSI_INDEX_MAP) {
-      return ANSI_INDEX_MAP[key as keyof typeof ANSI_INDEX_MAP]
+    if (key in ANSI_INDEX_MAP) {
+      return ANSI_INDEX_MAP[key]
     }
-    return typeof key === 'string' ? Number.parseInt(key, 10) : key
+    return -1
   }
 
   setColor(key: ThemeKey, color: ColorInput): this {
     if (!this.isSupported) return this
 
     const index = this.resolveIndex(key)
-    if (Number.isNaN(index) || index < 0 || index > 255) return this
+    if (index < 0) return this
 
     const hex = this.parseColor(color)
     process.stdout.write(`\x1b]4;${index};${hex}\x07`)
@@ -76,7 +76,7 @@ export class TermPalette {
     const sequence = entries
       .map(([key, color]) => {
         const index = this.resolveIndex(key as ThemeKey)
-        if (Number.isNaN(index) || index < 0 || index > 255) return null
+        if (index < 0) return null
         return `${index};${this.parseColor(color as ColorInput)}`
       })
       .filter(Boolean)
