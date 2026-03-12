@@ -1,6 +1,16 @@
 {
   "name": "termpal",
   "version": "0.0.0",
+  "keywords": [
+    "ansi",
+    "color",
+    "osc",
+    "palette",
+    "terminal",
+    "theme"
+  ],
+  "license": "MIT",
+  "repository": "clctv/termpal",
   "files": [
     "dist"
   ],
