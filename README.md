@@ -1,6 +1,6 @@
 # 🎨 Termpal
 
-**Shape your terminal theme in real time**
+> Shape your terminal theme in real time
 
 ## ✨ Features
 
