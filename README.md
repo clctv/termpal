@@ -1,10 +1,6 @@
 # 🎨 Termpal
 
-**Terminal ANSI palette controller via OSC 4**
-
-Modify the terminal **ANSI color palette** at runtime using the **OSC 4 escape sequence**.
-
-This allows CLI tools to dynamically change the terminal theme or redefine standard ANSI colors.
+**Shape your terminal theme in real time**
 
 ## ✨ Features
 
