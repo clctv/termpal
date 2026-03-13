@@ -1,22 +1,21 @@
-# 🎨 Termpal
+# Termpal
 
 > Shape your terminal theme in real time
 
-## ✨ Features
+## Highlights
 
-- 🎯 Modify **ANSI palette colors (0–15)**
-- 🏷️ Semantic color keys (`red`, `blue`, `green`, etc.)
-- 📦 Batch theme updates
-- 🌈 RGB or hex color input
-- 🛡️ Safe environment detection (TTY / CI / `NO_COLOR`)
+- Beautiful, curated **built-in themes**
+- Semantic color keys (`red`, `blue`, `green`, etc.)
+- RGB or hex color input
+- Safe environment detection (TTY / CI / `NO_COLOR`)
 
-## 📦 Install
+## Install
 
 ```bash
 npm install termpal
 ```
 
-## 🚀 Usage
+## Usage
 
 ```ts
 import { termpal } from 'termpal'
@@ -28,7 +27,7 @@ termpal.setTheme({
 })
 ```
 
-## 🎨 Built-in Themes
+## Built-in Themes
 
 ```ts
 import { termpal } from 'termpal'
@@ -49,7 +48,7 @@ Currently supported built-in themes:
 - `RosePine`
 - `NightOwl`
 
-## 🌈 RGB Input
+## RGB Input
 
 You can also pass RGB tuples:
 
@@ -59,15 +58,7 @@ termpal.setTheme({
 })
 ```
 
-Which becomes:
-
-```
-rgb:ff/c8/00
-```
-
-## 🧩 Supported Keys
-
-The following ANSI palette keys are available:
+## Supported Keys
 
 - `black`
 - `red`
@@ -86,17 +77,17 @@ The following ANSI palette keys are available:
 - `cyanBright`
 - `whiteBright`
 
-## 🔍 Environment Detection
+## Environment Detection
 
 The library automatically disables itself when the terminal environment is unsuitable.
 
 It will **not send OSC sequences** if:
 
-- ❌ output is not a **TTY**
-- 🤖 running in **CI**
-- 🚫 the `NO_COLOR` environment variable is set
+- output is not a **TTY**
+- running in **CI**
+- the `NO_COLOR` environment variable is set
 
-## ⚙️ How It Works
+## How It Works
 
 The library sends the **OSC 4 escape sequence**:
 
@@ -112,18 +103,18 @@ ESC ] 4 ; 1 ; #f38ba8 BEL
 
 This instructs the terminal to change **palette slot 1 (red)**.
 
-## 🖥️ Terminal Support
+## Terminal Support
 
 OSC palette modification is supported by many modern terminals including:
 
-- 🍎 iTerm2
-- 🐱 kitty
-- ⚡ WezTerm
-- 🧪 xterm
-- 🪟 Windows Terminal
+- iTerm2
+- kitty
+- WezTerm
+- xterm
+- Windows Terminal
 
 Support may vary across terminals.
 
-## 📄 License
+## License
 
 MIT
