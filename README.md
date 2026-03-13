@@ -4,8 +4,8 @@
 
 ## Highlights
 
-- Beautiful, curated **built-in themes**
 - Semantic color keys (`red`, `blue`, `green`, etc.)
+- Elegant **built-in themes**
 - RGB or hex color input
 - Safe environment detection (TTY / CI / `NO_COLOR`)
 
@@ -27,6 +27,25 @@ termpal.setTheme({
 })
 ```
 
+Supported Keys:
+
+- `black`
+- `red`
+- `green`
+- `yellow`
+- `blue`
+- `magenta`
+- `cyan`
+- `white`
+- `gray`
+- `redBright`
+- `greenBright`
+- `yellowBright`
+- `blueBright`
+- `magentaBright`
+- `cyanBright`
+- `whiteBright`
+
 ## Built-in Themes
 
 ```ts
@@ -35,7 +54,7 @@ import { termpal } from 'termpal'
 termpal.useTheme('Catppuccin')
 ```
 
-Currently supported built-in themes:
+Supported built-in themes:
 
 - `Catppuccin`
 - `Dracula`
@@ -57,25 +76,6 @@ termpal.setTheme({
   yellow: [255, 200, 0],
 })
 ```
-
-## Supported Keys
-
-- `black`
-- `red`
-- `green`
-- `yellow`
-- `blue`
-- `magenta`
-- `cyan`
-- `white`
-- `gray`
-- `redBright`
-- `greenBright`
-- `yellowBright`
-- `blueBright`
-- `magentaBright`
-- `cyanBright`
-- `whiteBright`
 
 ## Environment Detection
 
