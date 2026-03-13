@@ -22,8 +22,30 @@ const ANSI_INDEX_MAP = {
 
 export type ThemeKey = keyof typeof ANSI_INDEX_MAP
 export type ThemeConfig = Partial<Record<ThemeKey, ColorInput>>
+type BaseThemeKey =
+  | 'black'
+  | 'red'
+  | 'green'
+  | 'yellow'
+  | 'blue'
+  | 'magenta'
+  | 'cyan'
+  | 'white'
+  | 'gray'
+type DerivedBrightThemeKey = Exclude<ThemeKey, BaseThemeKey>
+type BaseThemeConfig = Record<BaseThemeKey, ColorInput>
 
 // Bright normalization rule for dark backgrounds: keep H unchanged, apply S +18 and L -2 (clamped).
+const BRIGHT_THEME_MAP: Record<DerivedBrightThemeKey, BaseThemeKey> = {
+  redBright: 'red',
+  greenBright: 'green',
+  yellowBright: 'yellow',
+  blueBright: 'blue',
+  magentaBright: 'magenta',
+  cyanBright: 'cyan',
+  whiteBright: 'white',
+}
+
 export const BUILTIN_THEMES = {
   Catppuccin: {
     black: '#1e1e2e',
@@ -35,33 +57,63 @@ export const BUILTIN_THEMES = {
     cyan: '#89dceb',
     white: '#cdd6f4',
     gray: '#6c7086',
-    redBright: '#fe759c',
-    greenBright: '#94ed8d',
-    yellowBright: '#ffe19f',
-    blueBright: '#7aacff',
-    magentaBright: '#f97be0',
-    cyanBright: '#73e3f7',
-    whiteBright: '#beccf9',
   },
   Dracula: {
     black: '#282a36',
     red: '#ff5555',
     green: '#50fa7b',
     yellow: '#f1fa8c',
-    blue: '#79b8ff',
+    blue: '#bd93f9',
     magenta: '#ff79c6',
     cyan: '#8be9fd',
     white: '#f8f8f2',
     gray: '#6272a4',
-    redBright: '#ff4b4b',
-    greenBright: '#41ff71',
-    yellowBright: '#f4ff7d',
-    blueBright: '#6fb3ff',
-    magentaBright: '#ff6fc2',
-    cyanBright: '#7fe9ff',
-    whiteBright: '#f7f7e9',
   },
-} as const satisfies Record<string, ThemeConfig>
+  TokyoNight: {
+    black: '#1a1b26',
+    red: '#f7768e',
+    green: '#9ece6a',
+    yellow: '#e0af68',
+    blue: '#7aa2f7',
+    magenta: '#bb9af7',
+    cyan: '#7dcfff',
+    white: '#a9b1d6',
+    gray: '#565f89',
+  },
+  Nord: {
+    black: '#2e3440',
+    red: '#bf616a',
+    green: '#a3be8c',
+    yellow: '#ebcb8b',
+    blue: '#81a1c1',
+    magenta: '#b48ead',
+    cyan: '#88c0d0',
+    white: '#d8dee9',
+    gray: '#4c566a',
+  },
+  OneDark: {
+    black: '#282c34',
+    red: '#e06c75',
+    green: '#98c379',
+    yellow: '#e5c07b',
+    blue: '#61afef',
+    magenta: '#c678dd',
+    cyan: '#56b6c2',
+    white: '#abb2bf',
+    gray: '#5c6370',
+  },
+  Gruvbox: {
+    black: '#282828',
+    red: '#cc241d',
+    green: '#98971a',
+    yellow: '#d79921',
+    blue: '#458588',
+    magenta: '#b16286',
+    cyan: '#689d6a',
+    white: '#ebdbb2',
+    gray: '#928374',
+  },
+} as const satisfies Record<string, BaseThemeConfig>
 export type BuiltinThemeName = keyof typeof BUILTIN_THEMES
 
 class Termpal {
@@ -110,6 +162,126 @@ class Termpal {
     return -1
   }
 
+  private clamp(value: number, min: number, max: number): number {
+    return Math.min(max, Math.max(min, value))
+  }
+
+  private toRgb(color: ColorInput): RGB | null {
+    if (Array.isArray(color)) {
+      return [
+        Math.round(this.clamp(color[0], 0, 255)),
+        Math.round(this.clamp(color[1], 0, 255)),
+        Math.round(this.clamp(color[2], 0, 255)),
+      ]
+    }
+
+    const hex = color.match(/^#?([0-9A-Fa-f]{6})$/)
+    if (hex) {
+      const value = hex[1]
+      return [
+        parseInt(value.slice(0, 2), 16),
+        parseInt(value.slice(2, 4), 16),
+        parseInt(value.slice(4, 6), 16),
+      ]
+    }
+
+    const rgb = color.match(/^rgb:([0-9A-Fa-f]{2})\/([0-9A-Fa-f]{2})\/([0-9A-Fa-f]{2})$/)
+    if (rgb) {
+      return [parseInt(rgb[1], 16), parseInt(rgb[2], 16), parseInt(rgb[3], 16)]
+    }
+
+    return null
+  }
+
+  private rgbToHsl([r, g, b]: RGB): [number, number, number] {
+    const rN = r / 255
+    const gN = g / 255
+    const bN = b / 255
+    const max = Math.max(rN, gN, bN)
+    const min = Math.min(rN, gN, bN)
+    const delta = max - min
+    const l = (max + min) / 2
+
+    if (delta === 0) {
+      return [0, 0, l * 100]
+    }
+
+    const s = delta / (1 - Math.abs(2 * l - 1))
+    let h = 0
+
+    if (max === rN) {
+      h = ((gN - bN) / delta) % 6
+    } else if (max === gN) {
+      h = (bN - rN) / delta + 2
+    } else {
+      h = (rN - gN) / delta + 4
+    }
+
+    const hue = (h * 60 + 360) % 360
+    return [hue, s * 100, l * 100]
+  }
+
+  private hslToRgb([h, s, l]: [number, number, number]): RGB {
+    const sN = this.clamp(s, 0, 100) / 100
+    const lN = this.clamp(l, 0, 100) / 100
+    const c = (1 - Math.abs(2 * lN - 1)) * sN
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
+    const m = lN - c / 2
+    const hN = ((h % 360) + 360) % 360
+    let rN = 0
+    let gN = 0
+    let bN = 0
+
+    if (hN < 60) {
+      rN = c
+      gN = x
+    } else if (hN < 120) {
+      rN = x
+      gN = c
+    } else if (hN < 180) {
+      gN = c
+      bN = x
+    } else if (hN < 240) {
+      gN = x
+      bN = c
+    } else if (hN < 300) {
+      rN = x
+      bN = c
+    } else {
+      rN = c
+      bN = x
+    }
+
+    return [Math.round((rN + m) * 255), Math.round((gN + m) * 255), Math.round((bN + m) * 255)]
+  }
+
+  private deriveBrightColor(color: ColorInput): ColorInput {
+    const rgb = this.toRgb(color)
+    if (!rgb) return color
+
+    const [h, s, l] = this.rgbToHsl(rgb)
+    const brightS = this.clamp(s + 18, 0, 100)
+    const brightL = this.clamp(l - 2, 0, 100)
+    return this.hslToRgb([h, brightS, brightL])
+  }
+
+  private withDerivedBrightColors(theme: ThemeConfig): ThemeConfig {
+    const mergedTheme: ThemeConfig = { ...theme }
+
+    for (const [brightKey, baseKey] of Object.entries(BRIGHT_THEME_MAP) as [
+      DerivedBrightThemeKey,
+      BaseThemeKey,
+    ][]) {
+      if (mergedTheme[brightKey] !== undefined) continue
+      const baseColor = mergedTheme[baseKey]
+      if (baseColor === undefined) continue
+      if (!this.isValidColorInput(baseColor)) continue
+      mergedTheme[brightKey] = this.deriveBrightColor(baseColor)
+    }
+
+    return mergedTheme
+  }
+
   private isValidColorInput(color: unknown): color is ColorInput {
     if (Array.isArray(color)) {
       return (
@@ -150,7 +322,7 @@ class Termpal {
   useTheme(themeName: BuiltinThemeName): this {
     const theme = BUILTIN_THEMES[themeName]
     if (!theme) return this
-    return this.setTheme(theme)
+    return this.setTheme(this.withDerivedBrightColors(theme))
   }
 }
 

@@ -40,6 +40,10 @@ Currently supported built-in themes:
 
 - `Catppuccin`
 - `Dracula`
+- `TokyoNight`
+- `Nord`
+- `OneDark`
+- `Gruvbox`
 
 ## 🌈 RGB Input
 
