@@ -344,7 +344,6 @@ class Termpal {
   private writeOsc4(index: number, color: ColorInput): void {
     const parsed = this.parseColor(color)
     process.stdout.write(`\x1b]4;${index};${parsed}\x07`)
-    process.stdout.write(`\x1b]4;${index};${parsed}\x1b\\`)
   }
 
   setTheme(theme: ThemeConfig): this {
