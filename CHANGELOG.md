@@ -1,5 +1,16 @@
 # Changelog
 
+# [0.5.0](https://github.com/clctv/termpal/compare/0.4.0...0.5.0) (2026-03-13)
+
+### Bug Fixes
+
+- apply colors separately ([21cbbb8](https://github.com/clctv/termpal/commit/21cbbb8e3c0d05065f9a03ff6eeeb0e596467371))
+
+### Features
+
+- add more theme ([6504ea2](https://github.com/clctv/termpal/commit/6504ea2844d62ce843cb5cbc570e23678c05042f))
+- add theme SolarizedDark,Monokai,RosePine,NightOwl ([2e3b386](https://github.com/clctv/termpal/commit/2e3b3869b24b3231b3c8072aa429a60c9577ecf7))
+
 # [0.4.0](https://github.com/clctv/termpal/compare/0.3.0...0.4.0) (2026-03-13)
 
 ### Features
