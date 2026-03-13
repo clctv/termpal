@@ -23,6 +23,7 @@ const ANSI_INDEX_MAP = {
 export type ThemeKey = keyof typeof ANSI_INDEX_MAP
 export type ThemeConfig = Partial<Record<ThemeKey, ColorInput>>
 
+// Bright normalization rule for dark backgrounds: keep H unchanged, apply S +18 and L -2 (clamped).
 export const BUILTIN_THEMES = {
   Catppuccin: {
     black: '#1e1e2e',
@@ -34,13 +35,31 @@ export const BUILTIN_THEMES = {
     cyan: '#89dceb',
     white: '#cdd6f4',
     gray: '#6c7086',
-    redBright: '#f5a2b9',
-    greenBright: '#b8e9b4',
-    yellowBright: '#fae8bf',
-    blueBright: '#a1c3fb',
-    magentaBright: '#f1a6e2',
-    cyanBright: '#a1e3ef',
-    whiteBright: '#d7def6',
+    redBright: '#fe759c',
+    greenBright: '#94ed8d',
+    yellowBright: '#ffe19f',
+    blueBright: '#7aacff',
+    magentaBright: '#f97be0',
+    cyanBright: '#73e3f7',
+    whiteBright: '#beccf9',
+  },
+  Dracula: {
+    black: '#282a36',
+    red: '#ff5555',
+    green: '#50fa7b',
+    yellow: '#f1fa8c',
+    blue: '#79b8ff',
+    magenta: '#ff79c6',
+    cyan: '#8be9fd',
+    white: '#f8f8f2',
+    gray: '#6272a4',
+    redBright: '#ff4b4b',
+    greenBright: '#41ff71',
+    yellowBright: '#f4ff7d',
+    blueBright: '#6fb3ff',
+    magentaBright: '#ff6fc2',
+    cyanBright: '#7fe9ff',
+    whiteBright: '#f7f7e9',
   },
 } as const satisfies Record<string, ThemeConfig>
 export type BuiltinThemeName = keyof typeof BUILTIN_THEMES
