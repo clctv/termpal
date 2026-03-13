@@ -67,9 +67,21 @@ export type BuiltinThemeName = keyof typeof BUILTIN_THEMES
 class Termpal {
   private isSupported: boolean
 
+  private isTruthyEnvFlag(value: string | undefined): boolean {
+    if (value === undefined) return false
+    const normalized = value.trim().toLowerCase()
+    return (
+      normalized !== '' &&
+      normalized !== '0' &&
+      normalized !== 'false' &&
+      normalized !== 'no' &&
+      normalized !== 'off'
+    )
+  }
+
   constructor() {
     const env = process.env
-    const isCI = !!env.CI
+    const isCI = this.isTruthyEnvFlag(env.CI)
     const isTTY = !!process.stdout?.isTTY
     const noColor = env.NO_COLOR !== undefined && env.NO_COLOR !== ''
 
@@ -98,23 +110,38 @@ class Termpal {
     return -1
   }
 
+  private isValidColorInput(color: unknown): color is ColorInput {
+    if (Array.isArray(color)) {
+      return (
+        color.length === 3 &&
+        color.every((channel) => typeof channel === 'number' && Number.isFinite(channel))
+      )
+    }
+
+    if (typeof color !== 'string') return false
+    if (color.trim() === '') return false
+    if (/^#?[0-9A-Fa-f]{6}$/.test(color)) return true
+    if (/^rgb:[0-9A-Fa-f]{2}\/[0-9A-Fa-f]{2}\/[0-9A-Fa-f]{2}$/.test(color)) return true
+    return false
+  }
+
+  private writeOsc4(index: number, color: ColorInput): void {
+    const parsed = this.parseColor(color)
+    process.stdout.write(`\x1b]4;${index};${parsed}\x07`)
+    process.stdout.write(`\x1b]4;${index};${parsed}\x1b\\`)
+  }
+
   setTheme(theme: ThemeConfig): this {
     if (!this.isSupported) return this
 
     const entries = Object.entries(theme)
     if (entries.length === 0) return this
 
-    const sequence = entries
-      .map(([key, color]) => {
-        const index = this.resolveIndex(key as ThemeKey)
-        if (index < 0) return null
-        return `${index};${this.parseColor(color as ColorInput)}`
-      })
-      .filter(Boolean)
-      .join(';')
-
-    if (sequence) {
-      process.stdout.write(`\x1b]4;${sequence}\x07`)
+    for (const [key, color] of entries) {
+      const index = this.resolveIndex(key as ThemeKey)
+      if (index < 0) continue
+      if (!this.isValidColorInput(color)) continue
+      this.writeOsc4(index, color)
     }
 
     return this
