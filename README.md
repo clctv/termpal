@@ -27,7 +27,7 @@ termpal.setTheme({
 })
 ```
 
-Supported Keys:
+### Supported Keys
 
 - `black`
 - `red`
@@ -54,7 +54,7 @@ import { termpal } from 'termpal'
 termpal.useTheme('Catppuccin')
 ```
 
-Supported built-in themes:
+### Supported built-in themes
 
 - `Catppuccin`
 - `Dracula`
