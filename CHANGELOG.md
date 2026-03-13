@@ -1,5 +1,13 @@
 # Changelog
 
+# [0.3.0](https://github.com/clctv/termpal/compare/0.2.0...0.3.0) (2026-03-13)
+
+### Features
+
+- change Catppuccin theme ([2074fc9](https://github.com/clctv/termpal/commit/2074fc9267f5a45bb0408388a8b9850329c48359))
+- rename export name ([0dfcb96](https://github.com/clctv/termpal/commit/0dfcb96b9659cf212c9ea2bdb842e16f4995fa76))
+- rename use to useTheme ([2883e2d](https://github.com/clctv/termpal/commit/2883e2d528a6498b5528cf7473a5f5e737bb5707))
+
 # [0.2.0](https://github.com/clctv/termpal/compare/0.1.0...0.2.0) (2026-03-12)
 
 ### Features
