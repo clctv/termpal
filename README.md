@@ -44,6 +44,10 @@ Currently supported built-in themes:
 - `Nord`
 - `OneDark`
 - `Gruvbox`
+- `SolarizedDark`
+- `Monokai`
+- `RosePine`
+- `NightOwl`
 
 ## 🌈 RGB Input
 
@@ -65,24 +69,22 @@ rgb:ff/c8/00
 
 The following ANSI palette keys are available:
 
-| Key           | ANSI Index |
-| ------------- | ---------- |
-| black         | 0          |
-| red           | 1          |
-| green         | 2          |
-| yellow        | 3          |
-| blue          | 4          |
-| magenta       | 5          |
-| cyan          | 6          |
-| white         | 7          |
-| gray          | 8          |
-| redBright     | 9          |
-| greenBright   | 10         |
-| yellowBright  | 11         |
-| blueBright    | 12         |
-| magentaBright | 13         |
-| cyanBright    | 14         |
-| whiteBright   | 15         |
+- `black`
+- `red`
+- `green`
+- `yellow`
+- `blue`
+- `magenta`
+- `cyan`
+- `white`
+- `gray`
+- `redBright`
+- `greenBright`
+- `yellowBright`
+- `blueBright`
+- `magentaBright`
+- `cyanBright`
+- `whiteBright`
 
 ## 🔍 Environment Detection
 
