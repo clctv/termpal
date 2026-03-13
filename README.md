@@ -96,7 +96,7 @@ ESC ] 4 ; index ; color BEL
 Example:
 
 ```
-ESC ] 4 ; 1 ; #ff0000 BEL
+ESC ] 4 ; 1 ; #f38ba8 BEL
 ```
 
 This instructs the terminal to change **palette slot 1 (red)**.
