@@ -54,7 +54,7 @@ import { termpal } from 'termpal'
 termpal.useTheme('Catppuccin')
 ```
 
-### Supported built-in themes
+### Supported themes
 
 - `Catppuccin`
 - `Dracula`
