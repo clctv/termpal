@@ -19,9 +19,9 @@ npm install termpal
 ## 🚀 Usage
 
 ```ts
-import { palette } from 'termpal'
+import { termpal } from 'termpal'
 
-palette.setTheme({
+termpal.setTheme({
   red: '#f38ba8',
   green: '#a6e3a1',
   yellow: '#f9e2af',
@@ -31,9 +31,9 @@ palette.setTheme({
 ## 🎨 Built-in Theme
 
 ```ts
-import { palette } from 'termpal'
+import { termpal } from 'termpal'
 
-palette.useTheme('Catppuccin')
+termpal.useTheme('Catppuccin')
 ```
 
 ## 🌈 RGB Input
@@ -41,7 +41,7 @@ palette.useTheme('Catppuccin')
 You can also pass RGB tuples:
 
 ```ts
-palette.setTheme({
+termpal.setTheme({
   yellow: [255, 200, 0],
 })
 ```

@@ -45,7 +45,7 @@ export const BUILTIN_THEMES = {
 } as const satisfies Record<string, ThemeConfig>
 export type BuiltinThemeName = keyof typeof BUILTIN_THEMES
 
-export class TermPalette {
+class Termpal {
   private isSupported: boolean
 
   constructor() {
@@ -108,4 +108,4 @@ export class TermPalette {
   }
 }
 
-export const palette = new TermPalette()
+export const termpal = new Termpal()
