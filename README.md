@@ -28,13 +28,18 @@ termpal.setTheme({
 })
 ```
 
-## 🎨 Built-in Theme
+## 🎨 Built-in Themes
 
 ```ts
 import { termpal } from 'termpal'
 
 termpal.useTheme('Catppuccin')
 ```
+
+Currently supported built-in themes:
+
+- `Catppuccin`
+- `Dracula`
 
 ## 🌈 RGB Input
 
