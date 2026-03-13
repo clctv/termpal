@@ -79,17 +79,6 @@ export class TermPalette {
     return -1
   }
 
-  setColor(key: ThemeKey, color: ColorInput): this {
-    if (!this.isSupported) return this
-
-    const index = this.resolveIndex(key)
-    if (index < 0) return this
-
-    const hex = this.parseColor(color)
-    process.stdout.write(`\x1b]4;${index};${hex}\x07`)
-    return this
-  }
-
   setTheme(theme: ThemeConfig): this {
     if (!this.isSupported) return this
 
@@ -112,7 +101,7 @@ export class TermPalette {
     return this
   }
 
-  use(themeName: BuiltinThemeName): this {
+  useTheme(themeName: BuiltinThemeName): this {
     const theme = BUILTIN_THEMES[themeName]
     if (!theme) return this
     return this.setTheme(theme)

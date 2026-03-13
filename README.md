@@ -21,20 +21,6 @@ npm install termpal
 ```ts
 import { palette } from 'termpal'
 
-palette.setColor('red', '#ff0000')
-```
-
-## 🎨 Built-in Theme
-
-```ts
-import { palette } from 'termpal'
-
-palette.use('Catppuccin')
-```
-
-## 🎛️ Set Multiple Colors
-
-```ts
 palette.setTheme({
   red: '#f38ba8',
   green: '#a6e3a1',
@@ -42,14 +28,22 @@ palette.setTheme({
 })
 ```
 
-This sends a single **OSC 4 sequence** to update multiple palette slots.
+## 🎨 Built-in Theme
+
+```ts
+import { palette } from 'termpal'
+
+palette.useTheme('Catppuccin')
+```
 
 ## 🌈 RGB Input
 
 You can also pass RGB tuples:
 
 ```ts
-palette.setColor('yellow', [255, 200, 0])
+palette.setTheme({
+  yellow: [255, 200, 0],
+})
 ```
 
 Which becomes:
@@ -118,20 +112,6 @@ OSC palette modification is supported by many modern terminals including:
 - 🪟 Windows Terminal
 
 Support may vary across terminals.
-
-## 🎨 Example: Theme
-
-```ts
-palette.setTheme({
-  red: '#f38ba8',
-  green: '#a6e3a1',
-  yellow: '#f9e2af',
-  blue: '#89b4fa',
-  magenta: '#ee90db',
-  cyan: '#94e2d5',
-  gray: '#6c7086',
-})
-```
 
 ## 📄 License
 
