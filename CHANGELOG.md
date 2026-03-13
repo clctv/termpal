@@ -1,5 +1,11 @@
 # Changelog
 
+# [0.4.0](https://github.com/clctv/termpal/compare/0.3.0...0.4.0) (2026-03-13)
+
+### Features
+
+- add Dracula theme ([12e7b47](https://github.com/clctv/termpal/commit/12e7b473509c3f14096421498ac14d49378ba3dd))
+
 # [0.3.0](https://github.com/clctv/termpal/compare/0.2.0...0.3.0) (2026-03-13)
 
 ### Features
