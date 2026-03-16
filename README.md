@@ -9,13 +9,41 @@
 - RGB or hex color input
 - Safe environment detection (TTY / CI / `NO_COLOR`)
 
-## Quick Start
+## CLI
+
+### Install globally
 
 ```bash
-npx termpal
+npm i -g termpal
+```
+
+Open interactive picker (applies theme to the current terminal session only):
+
+```bash
+termpal
+```
+
+### Persistence
+
+Install auto-apply into your shell profile:
+
+```bash
+termpal install
+```
+
+Remove auto-apply from your shell profile:
+
+```bash
+termpal uninstall
 ```
 
 ## API
+
+### Install
+
+```bash
+npm i termpal
+```
 
 ### Use built-in themes
 
