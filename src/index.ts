@@ -354,7 +354,7 @@ class Termpal {
     process.stdout.write(`\x1b]104;${index}\x07`)
   }
 
-  setTheme(theme: ThemeConfig): this {
+  set(theme: ThemeConfig): this {
     if (!this.isSupported) return this
 
     const entries = Object.entries(theme)
@@ -370,13 +370,13 @@ class Termpal {
     return this
   }
 
-  useTheme(themeName: BuiltinThemeName): this {
+  use(themeName: BuiltinThemeName): this {
     const theme = BUILTIN_THEMES[themeName]
     if (!theme) return this
-    return this.setTheme(this.withDerivedBrightColors(theme))
+    return this.set(this.withDerivedBrightColors(theme))
   }
 
-  resetTheme(keys?: ThemeKey[]): this {
+  reset(keys?: ThemeKey[]): this {
     if (!this.isSupported) return this
 
     if (!keys || keys.length === 0) {

@@ -20,7 +20,7 @@ npm install termpal
 ```ts
 import { termpal } from 'termpal'
 
-termpal.setTheme({
+termpal.set({
   red: '#f38ba8',
   green: '#a6e3a1',
   yellow: '#f9e2af',
@@ -51,7 +51,7 @@ termpal.setTheme({
 ```ts
 import { termpal } from 'termpal'
 
-termpal.useTheme('Catppuccin')
+termpal.use('Catppuccin')
 ```
 
 ### Supported themes
@@ -72,7 +72,7 @@ termpal.useTheme('Catppuccin')
 You can also pass RGB tuples:
 
 ```ts
-termpal.setTheme({
+termpal.set({
   yellow: [255, 200, 0],
 })
 ```

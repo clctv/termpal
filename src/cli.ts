@@ -9,7 +9,7 @@ let lastTheme: BuiltinThemeName | undefined
 
 const applyPreviewTheme = (nextTheme: BuiltinThemeName): string => {
   if (lastTheme !== nextTheme) {
-    termpal.useTheme(nextTheme)
+    termpal.use(nextTheme)
     lastTheme = nextTheme
   }
 
@@ -35,7 +35,7 @@ const run = async () => {
       },
     })
   } catch (error) {
-    termpal.resetTheme()
+    termpal.reset()
     if (isPromptExitError(error)) {
       return
     }
