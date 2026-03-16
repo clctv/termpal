@@ -1,5 +1,19 @@
 # Changelog
 
+# [1.0.0](https://github.com/clctv/termpal/compare/0.5.0...1.0.0) (2026-03-16)
+
+### Bug Fixes
+
+- should only write osc for once ([97ef2f1](https://github.com/clctv/termpal/commit/97ef2f1534109541d34bbf0f4799f6839b67dd12))
+
+### Features
+
+- auto detect active theme ([a0f19b2](https://github.com/clctv/termpal/commit/a0f19b227a234ae4771c93e42fcd95f2a22acabf))
+- rename api ([2454bd5](https://github.com/clctv/termpal/commit/2454bd51e7e28577301a324e04849ecaea1a446d))
+- support -v ([e8e69d3](https://github.com/clctv/termpal/commit/e8e69d3a6846b2afe3a64540131aeb0fc4b31779))
+- support auto apply in new terminal session ([55e6d5a](https://github.com/clctv/termpal/commit/55e6d5a97eb812fcaf4777f735032131a5ccd5bf))
+- support cli ([1802069](https://github.com/clctv/termpal/commit/1802069df9edcd770185a01e42028247d7cd593d))
+
 # [0.5.0](https://github.com/clctv/termpal/compare/0.4.0...0.5.0) (2026-03-13)
 
 ### Bug Fixes
