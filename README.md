@@ -4,18 +4,43 @@
 
 ## Highlights
 
-- Semantic color keys (`red`, `blue`, `green`, etc.)
 - Elegant **built-in themes**
+- Semantic color keys (`red`, `blue`, `green`, etc.)
 - RGB or hex color input
 - Safe environment detection (TTY / CI / `NO_COLOR`)
 
-## Install
+## Quick Start
+
+Run the interactive theme picker:
 
 ```bash
-npm install termpal
+npx termpal
 ```
 
-## Usage
+## API
+
+### Use built-in themes
+
+```ts
+import { termpal } from 'termpal'
+
+termpal.use('Catppuccin')
+```
+
+#### Supported themes
+
+- `Catppuccin`
+- `Dracula`
+- `TokyoNight`
+- `Nord`
+- `OneDark`
+- `Gruvbox`
+- `SolarizedDark`
+- `Monokai`
+- `RosePine`
+- `NightOwl`
+
+### Set colors manually
 
 ```ts
 import { termpal } from 'termpal'
@@ -23,11 +48,11 @@ import { termpal } from 'termpal'
 termpal.set({
   red: '#f38ba8',
   green: '#a6e3a1',
-  yellow: '#f9e2af',
+  yellow: [255, 200, 0],
 })
 ```
 
-### Supported Keys
+#### Supported keys
 
 - `black`
 - `red`
@@ -46,35 +71,12 @@ termpal.set({
 - `cyanBright`
 - `whiteBright`
 
-## Built-in Themes
+### Reset palette
 
 ```ts
 import { termpal } from 'termpal'
 
-termpal.use('Catppuccin')
-```
-
-### Supported themes
-
-- `Catppuccin`
-- `Dracula`
-- `TokyoNight`
-- `Nord`
-- `OneDark`
-- `Gruvbox`
-- `SolarizedDark`
-- `Monokai`
-- `RosePine`
-- `NightOwl`
-
-## RGB Input
-
-You can also pass RGB tuples:
-
-```ts
-termpal.set({
-  yellow: [255, 200, 0],
-})
+termpal.reset()
 ```
 
 ## Environment Detection
