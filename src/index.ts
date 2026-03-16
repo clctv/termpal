@@ -158,10 +158,12 @@ export const BUILTIN_THEMES = {
     gray: '#5f7e97',
   },
 } as const satisfies Record<string, BaseThemeConfig>
-export type BuiltinThemeName = keyof typeof BUILTIN_THEMES
+export type BuiltinTheme = keyof typeof BUILTIN_THEMES
+type BuiltinThemeConfig = (typeof BUILTIN_THEMES)[BuiltinTheme]
 
 class Termpal {
   private isSupported: boolean
+  private activeBuiltinTheme: BuiltinTheme | undefined
 
   private isTruthyEnvFlag(value: string | undefined): boolean {
     if (value === undefined) return false
@@ -197,6 +199,12 @@ class Termpal {
     }
 
     return color
+  }
+
+  private normalizeHex6(color: string): string | null {
+    const match = color.match(/^#?([0-9A-Fa-f]{6})$/)
+    if (!match) return null
+    return `#${match[1].toLowerCase()}`
   }
 
   private resolveIndex(key: ThemeKey): number {
@@ -235,6 +243,12 @@ class Termpal {
     }
 
     return null
+  }
+
+  private toHex6(color: ColorInput): string | null {
+    const rgb = this.toRgb(color)
+    if (!rgb) return null
+    return `#${rgb.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
   }
 
   private rgbToHsl([r, g, b]: RGB): [number, number, number] {
@@ -354,6 +368,111 @@ class Termpal {
     process.stdout.write(`\x1b]104;${index}\x07`)
   }
 
+  private parseOsc4QueryColor(payload: string): string | null {
+    const normalized = payload.trim()
+    const directHex = this.normalizeHex6(normalized)
+    if (directHex) return directHex
+
+    const rgb16 = normalized.match(
+      /^rgb:([0-9A-Fa-f]{1,4})\/([0-9A-Fa-f]{1,4})\/([0-9A-Fa-f]{1,4})$/,
+    )
+    if (rgb16) {
+      const to8BitHex = (value: string): string => {
+        const max = (1 << (value.length * 4)) - 1
+        const parsed = parseInt(value, 16)
+        if (max <= 0) return '00'
+        return Math.round((parsed / max) * 255)
+          .toString(16)
+          .padStart(2, '0')
+      }
+      return `#${to8BitHex(rgb16[1])}${to8BitHex(rgb16[2])}${to8BitHex(rgb16[3])}`
+    }
+
+    return null
+  }
+
+  private queryOsc4Color(index: number, timeoutMs: number): Promise<string | null> {
+    const stdin = process.stdin
+    if (!stdin.isTTY || !process.stdout.isTTY) return Promise.resolve(null)
+
+    return new Promise((resolve) => {
+      const wasRaw = Boolean((stdin as NodeJS.ReadStream & { isRaw?: boolean }).isRaw)
+      const shouldToggleRaw = typeof stdin.setRawMode === 'function'
+      const shouldResume = stdin.isPaused()
+      let settled = false
+      let buffer = ''
+      let timer: NodeJS.Timeout | undefined
+
+      const cleanup = () => {
+        stdin.off('data', onData)
+        if (timer) clearTimeout(timer)
+        if (shouldToggleRaw && !wasRaw) stdin.setRawMode(false)
+        if (shouldResume) stdin.pause()
+      }
+
+      const finish = (value: string | null) => {
+        if (settled) return
+        settled = true
+        cleanup()
+        resolve(value)
+      }
+
+      const onData = (chunk: Buffer | string) => {
+        buffer += typeof chunk === 'string' ? chunk : chunk.toString('utf8')
+        const match = buffer.match(
+          new RegExp(`\\x1b\\]4;${index};([^\\x07\\x1b]+)(?:\\x07|\\x1b\\\\)`, 'i'),
+        )
+        if (!match) return
+        finish(this.parseOsc4QueryColor(match[1]))
+      }
+
+      stdin.on('data', onData)
+      if (shouldToggleRaw && !wasRaw) stdin.setRawMode(true)
+      if (shouldResume) stdin.resume()
+
+      timer = setTimeout(() => finish(null), Math.max(10, timeoutMs))
+      process.stdout.write(`\x1b]4;${index};?\x07`)
+    })
+  }
+
+  private async readBasePalette(timeoutMs: number): Promise<Partial<Record<BaseThemeKey, string>>> {
+    const keys: BaseThemeKey[] = [
+      'black',
+      'red',
+      'green',
+      'yellow',
+      'blue',
+      'magenta',
+      'cyan',
+      'white',
+      'gray',
+    ]
+    const palette: Partial<Record<BaseThemeKey, string>> = {}
+
+    for (const key of keys) {
+      const index = this.resolveIndex(key)
+      if (index < 0) continue
+      const color = await this.queryOsc4Color(index, timeoutMs)
+      if (!color) continue
+      palette[key] = color
+    }
+
+    return palette
+  }
+
+  private doesPaletteMatchTheme(
+    palette: Partial<Record<BaseThemeKey, string>>,
+    theme: BuiltinThemeConfig,
+  ): boolean {
+    const keys = Object.keys(theme) as BaseThemeKey[]
+    return keys.every((key) => {
+      const paletteColor = palette[key]
+      if (!paletteColor) return false
+      const themeColor = this.toHex6(theme[key])
+      return !!themeColor && paletteColor === themeColor
+    })
+  }
+
   set(theme: ThemeConfig): this {
     if (!this.isSupported) return this
 
@@ -367,13 +486,34 @@ class Termpal {
       this.writeOsc4(index, color)
     }
 
+    this.activeBuiltinTheme = undefined
+
     return this
   }
 
-  use(themeName: BuiltinThemeName): this {
+  use(themeName: BuiltinTheme): this {
     const theme = BUILTIN_THEMES[themeName]
     if (!theme) return this
-    return this.set(this.withDerivedBrightColors(theme))
+    this.set(this.withDerivedBrightColors(theme))
+    this.activeBuiltinTheme = themeName
+    return this
+  }
+
+  async detectBuiltinTheme(timeoutMs = 80): Promise<BuiltinTheme | undefined> {
+    if (this.activeBuiltinTheme) return this.activeBuiltinTheme
+    if (!this.isSupported) return undefined
+
+    const palette = await this.readBasePalette(timeoutMs)
+    if (Object.keys(palette).length === 0) return undefined
+
+    for (const themeName of Object.keys(BUILTIN_THEMES) as BuiltinTheme[]) {
+      const theme = BUILTIN_THEMES[themeName]
+      if (!this.doesPaletteMatchTheme(palette, theme)) continue
+      this.activeBuiltinTheme = themeName
+      return themeName
+    }
+
+    return undefined
   }
 
   reset(keys?: ThemeKey[]): this {
@@ -381,6 +521,7 @@ class Termpal {
 
     if (!keys || keys.length === 0) {
       this.resetOsc4()
+      this.activeBuiltinTheme = undefined
       return this
     }
 
@@ -389,6 +530,8 @@ class Termpal {
       if (index < 0) continue
       this.resetOsc4(index)
     }
+
+    this.activeBuiltinTheme = undefined
 
     return this
   }

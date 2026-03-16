@@ -1,16 +1,25 @@
 #!/usr/bin/env node
 
 import select from '@inquirer/select'
-import { BUILTIN_THEMES, termpal, type BuiltinThemeName } from './index'
+import colors from 'picocolors'
+import { BUILTIN_THEMES, termpal, type BuiltinTheme } from './index'
 
-const themeNames = Object.keys(BUILTIN_THEMES) as BuiltinThemeName[]
+type ThemeSelectValue = BuiltinTheme | 'System'
+const themeNames: ThemeSelectValue[] = [
+  'System',
+  ...(Object.keys(BUILTIN_THEMES) as BuiltinTheme[]),
+]
 
-let lastTheme: BuiltinThemeName | undefined
+let lastPreviewTheme: ThemeSelectValue | undefined
 
-const applyPreviewTheme = (nextTheme: BuiltinThemeName): string => {
-  if (lastTheme !== nextTheme) {
-    termpal.use(nextTheme)
-    lastTheme = nextTheme
+const applyPreviewTheme = (next: ThemeSelectValue): string => {
+  if (lastPreviewTheme !== next) {
+    if (next === 'System') {
+      termpal.reset()
+    } else {
+      termpal.use(next)
+    }
+    lastPreviewTheme = next
   }
 
   return ''
@@ -20,14 +29,20 @@ const isPromptExitError = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && 'name' in error && error.name === 'ExitPromptError'
 
 const run = async () => {
+  const currentTheme = await termpal.detectBuiltinTheme()
+  const currentSelection: ThemeSelectValue = currentTheme ?? 'System'
+  lastPreviewTheme = currentSelection
+
   try {
-    await select<BuiltinThemeName>({
-      message: 'Pick a theme',
+    await select<ThemeSelectValue>({
+      message: 'Pick a theme:',
       choices: themeNames.map((themeName) => ({
         value: themeName,
-        name: themeName,
+        name:
+          themeName === currentSelection ? `${themeName} ${colors.dim('(current)')}` : themeName,
         description: themeName,
       })),
+      default: currentSelection,
       theme: {
         style: {
           description: applyPreviewTheme,
@@ -35,8 +50,12 @@ const run = async () => {
       },
     })
   } catch (error) {
-    termpal.reset()
     if (isPromptExitError(error)) {
+      if (currentSelection === 'System') {
+        termpal.reset()
+      } else {
+        termpal.use(currentSelection)
+      }
       return
     }
     throw error
