@@ -12,6 +12,9 @@
   ],
   "license": "MIT",
   "repository": "clctv/termpal",
+  "bin": {
+    "termpal": "./dist/cli.js"
+  },
   "files": [
     "dist"
   ],
@@ -28,6 +31,9 @@
     "dev": "rslib build --watch",
     "release": "pnpm run build && release-it --only-version",
     "prepare": "husky"
+  },
+  "dependencies": {
+    "@inquirer/select": "^5.1.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.4.4",

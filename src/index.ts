@@ -346,6 +346,14 @@ class Termpal {
     process.stdout.write(`\x1b]4;${index};${parsed}\x07`)
   }
 
+  private resetOsc4(index?: number): void {
+    if (index === undefined) {
+      process.stdout.write('\x1b]104\x07')
+      return
+    }
+    process.stdout.write(`\x1b]104;${index}\x07`)
+  }
+
   setTheme(theme: ThemeConfig): this {
     if (!this.isSupported) return this
 
@@ -366,6 +374,23 @@ class Termpal {
     const theme = BUILTIN_THEMES[themeName]
     if (!theme) return this
     return this.setTheme(this.withDerivedBrightColors(theme))
+  }
+
+  resetTheme(keys?: ThemeKey[]): this {
+    if (!this.isSupported) return this
+
+    if (!keys || keys.length === 0) {
+      this.resetOsc4()
+      return this
+    }
+
+    for (const key of keys) {
+      const index = this.resolveIndex(key)
+      if (index < 0) continue
+      this.resetOsc4(index)
+    }
+
+    return this
   }
 }
 
