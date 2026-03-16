@@ -11,8 +11,6 @@
 
 ## Quick Start
 
-Run the interactive theme picker:
-
 ```bash
 npx termpal
 ```
