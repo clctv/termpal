@@ -82,6 +82,16 @@ const readTextFile = (filePath: string): string => {
   }
 }
 
+const readVersion = (): string => {
+  try {
+    const packageJson = readFileSync(new URL('../package.json', import.meta.url), 'utf8')
+    const parsed = JSON.parse(packageJson) as { version?: unknown }
+    return typeof parsed.version === 'string' ? parsed.version : 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
+
 const resolveShellProfilePath = (): string | undefined => {
   const shell = process.env.SHELL?.toLowerCase() ?? ''
   const home = process.env.HOME?.trim() || process.env.USERPROFILE?.trim() || homedir()
@@ -190,6 +200,10 @@ const isPromptExitError = (error: unknown): boolean =>
 
 const run = async () => {
   const cliArg = process.argv[2]
+  if (cliArg === '-v') {
+    console.log(readVersion())
+    return
+  }
   if (cliArg === 'install') {
     installAutoApply()
     return
