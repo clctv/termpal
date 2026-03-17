@@ -228,6 +228,7 @@ const run = async () => {
           themeName === currentSelection ? `${themeName} ${colors.dim('(current)')}` : themeName,
         description: themeName,
       })),
+      pageSize: themeNames.length,
       default: currentSelection,
       theme: {
         style: {
