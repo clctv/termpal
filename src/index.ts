@@ -35,7 +35,6 @@ type BaseThemeKey =
 type DerivedBrightThemeKey = Exclude<ThemeKey, BaseThemeKey>
 type BaseThemeConfig = Record<BaseThemeKey, ColorInput>
 
-// Bright normalization rule for dark backgrounds: keep H unchanged, apply S +18 and L -2 (clamped).
 const BRIGHT_THEME_MAP: Record<DerivedBrightThemeKey, BaseThemeKey> = {
   redBright: 'red',
   greenBright: 'green',
@@ -260,12 +259,6 @@ class Termpal {
     return null
   }
 
-  private toHex6(color: ColorInput): string | null {
-    const rgb = this.toRgb(color)
-    if (!rgb) return null
-    return `#${rgb.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
-  }
-
   private rgbToHsl([r, g, b]: RGB): [number, number, number] {
     const rN = r / 255
     const gN = g / 255
@@ -337,7 +330,7 @@ class Termpal {
     const brightL = this.clamp(l - 2, 0, 100)
     return this.hslToRgb([h, brightS, brightL])
   }
-
+  // Bright normalization rule for dark backgrounds: keep H unchanged, apply S +18 and L -2 (clamped).
   private withDerivedBrightColors(theme: ThemeConfig): ThemeConfig {
     const mergedTheme: ThemeConfig = { ...theme }
 
