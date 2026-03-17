@@ -63,6 +63,8 @@ termpal.use('Catppuccin')
 - `Gruvbox`
 - `SolarizedDark`
 - `Monokai`
+- `MonokaiPro`
+- `MonokaiDimmed`
 - `RosePine`
 - `NightOwl`
 
