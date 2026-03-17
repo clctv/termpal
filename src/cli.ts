@@ -218,8 +218,7 @@ const run = async () => {
     return
   }
 
-  const currentTheme = await termpal.detectBuiltinTheme()
-  const currentSelection: ThemeSelectValue = currentTheme ?? 'System'
+  const currentSelection = readPersistedSelection() ?? 'System'
   lastPreviewTheme = currentSelection
 
   try {
