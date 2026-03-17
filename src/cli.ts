@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import select from '@inquirer/select'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import colors from 'picocolors'
@@ -56,6 +56,7 @@ const applySelection = (selection: ThemeSelectValue): void => {
 const readPersistedSelection = (): ThemeSelectValue | undefined => {
   const stateFilePath = getStateFilePath()
   if (!stateFilePath) return undefined
+  if (!existsSync(stateFilePath)) return undefined
 
   try {
     const content = readFileSync(stateFilePath, 'utf8')
@@ -75,6 +76,7 @@ const writePersistedSelection = (selection: ThemeSelectValue): void => {
 }
 
 const readTextFile = (filePath: string): string => {
+  if (!existsSync(filePath)) return ''
   try {
     return readFileSync(filePath, 'utf8')
   } catch {
