@@ -212,15 +212,11 @@ const run = async () => {
     uninstallAutoApply()
     return
   }
-  if (cliArg === '--apply') {
-    const persistedSelection = readPersistedSelection()
-    if (persistedSelection) applySelection(persistedSelection)
-    return
-  }
-
-  const currentSelection = readPersistedSelection() ?? 'System'
+  const persistedSelection = readPersistedSelection()
+  if (persistedSelection) applySelection(persistedSelection)
+  if (cliArg === '--apply') return
+  const currentSelection = persistedSelection ?? 'System'
   lastPreviewTheme = currentSelection
-
   try {
     const selected = await select<ThemeSelectValue>({
       message: 'Pick a theme:',
