@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.1](https://github.com/clctv/termpal/compare/1.0.0...1.0.1) (2026-03-17)
+
+### Bug Fixes
+
+- keep interactive picker behavior consistent by deriving currentSelection from persisted state ([b48112e](https://github.com/clctv/termpal/commit/b48112e83c2d28efda463bb63a5fac49aa721e7a))
+- remove built-in theme detect ([5e59157](https://github.com/clctv/termpal/commit/5e59157b95229c02f1a7be159dc0d3257b251542))
+
+### Performance Improvements
+
+- optimized file-read paths in cli.ts to avoid using exceptions ([f963de6](https://github.com/clctv/termpal/commit/f963de6404b5b8bc951b8a55bb314f7e67818d64))
+
 # [1.0.0](https://github.com/clctv/termpal/compare/0.5.0...1.0.0) (2026-03-16)
 
 ### Bug Fixes
