@@ -1,5 +1,16 @@
 # Changelog
 
+# [1.1.0](https://github.com/clctv/termpal/compare/1.0.1...1.1.0) (2026-03-18)
+
+### Features
+
+- add MonokaiPro and MonokaiDimmed theme ([6caa709](https://github.com/clctv/termpal/commit/6caa7093b9972f0496256a173b441cc869f4194b))
+- use theme length as pageSize ([9def19f](https://github.com/clctv/termpal/commit/9def19f62e32d0143a27c8f2fec29f070d8ea37a))
+
+### Performance Improvements
+
+- remove @inquirer/select ([be49b72](https://github.com/clctv/termpal/commit/be49b72cca42495f3456f0d47f479601c616e420))
+
 ## [1.0.1](https://github.com/clctv/termpal/compare/1.0.0...1.0.1) (2026-03-17)
 
 ### Bug Fixes
