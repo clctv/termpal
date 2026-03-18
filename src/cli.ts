@@ -13,7 +13,6 @@ const themeNames: ThemeSelectValue[] = [
   ...(Object.keys(BUILTIN_THEMES) as BuiltinTheme[]),
 ]
 
-let lastPreviewTheme: ThemeSelectValue | undefined
 const AUTO_APPLY_START = '# >>> termpal >>>'
 const AUTO_APPLY_END = '# <<< termpal <<<'
 const AUTO_APPLY_COMMAND = 'termpal --apply'
@@ -188,15 +187,6 @@ const uninstallAutoApply = (): void => {
   console.log(`Removed auto apply from ${profilePath}.`)
 }
 
-const applyPreviewTheme = (next: ThemeSelectValue): string => {
-  if (lastPreviewTheme !== next) {
-    applySelection(next)
-    lastPreviewTheme = next
-  }
-
-  return ''
-}
-
 const isPromptExitError = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && 'name' in error && error.name === 'ExitPromptError'
 
@@ -218,7 +208,6 @@ const run = async () => {
   if (persistedSelection) applySelection(persistedSelection)
   if (cliArg === '--apply') return
   const currentSelection = persistedSelection ?? 'System'
-  lastPreviewTheme = currentSelection
   try {
     const selected = await select<ThemeSelectValue>({
       message: 'Pick a theme:',
@@ -232,7 +221,10 @@ const run = async () => {
       default: currentSelection,
       theme: {
         style: {
-          description: applyPreviewTheme,
+          description: (next) => {
+            applySelection(next)
+            return ''
+          },
         },
       },
     })
