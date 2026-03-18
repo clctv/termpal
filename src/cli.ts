@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import select from '@inquirer/select'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import colors from 'picocolors'
 import { BUILTIN_THEMES, termpal, type BuiltinTheme } from './index'
+import select from './select'
 
 type ThemeSelectValue = BuiltinTheme | 'System'
 const themeNames: ThemeSelectValue[] = [

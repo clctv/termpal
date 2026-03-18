@@ -32,10 +32,6 @@
     "release": "pnpm run build && release-it --only-version",
     "prepare": "husky"
   },
-  "dependencies": {
-    "@inquirer/select": "^5.1.2",
-    "picocolors": "^1.1.1"
-  },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
@@ -46,6 +42,7 @@
     "lint-staged": "^16.4.0",
     "oxfmt": "^0.41.0",
     "oxlint": "^1.56.0",
+    "picocolors": "^1.1.1",
     "release-it": "^19.2.4",
     "typescript": "^5.9.3"
   },
