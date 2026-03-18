@@ -62,11 +62,10 @@ termpal.use('Catppuccin')
 - `OneDark`
 - `Gruvbox`
 - `SolarizedDark`
-- `Monokai`
 - `MonokaiPro`
 - `MonokaiDimmed`
-- `RosePine`
-- `NightOwl`
+- `GitHubDark`
+- `AyuDark`
 
 ### Set colors manually
 
