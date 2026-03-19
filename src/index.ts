@@ -162,10 +162,21 @@ export const BUILTIN_THEMES = {
     green: '#b8cc52',
     yellow: '#e7c547',
     blue: '#36a3d9',
-    magenta: '#f07178',
+    magenta: '#d2a6ff',
     cyan: '#95e6cb',
     white: '#b3b1ad',
     gray: '#4d5566',
+  },
+  Kanagawa: {
+    black: '#1f1f28',
+    red: '#e46876',
+    green: '#98bb6c',
+    yellow: '#e6c384',
+    blue: '#7e9cd8',
+    magenta: '#957fb8',
+    cyan: '#7fb4ca',
+    white: '#dcd7ba',
+    gray: '#727169',
   },
 } as const satisfies Record<string, BaseThemeConfig>
 export type BuiltinTheme = keyof typeof BUILTIN_THEMES

@@ -66,6 +66,7 @@ termpal.use('Catppuccin')
 - `MonokaiDimmed`
 - `GitHubDark`
 - `AyuDark`
+- `Kanagawa`
 
 ### Set colors manually
 
