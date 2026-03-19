@@ -1,5 +1,16 @@
 # Changelog
 
+# [1.2.0](https://github.com/clctv/termpal/compare/1.1.0...1.2.0) (2026-03-19)
+
+### Bug Fixes
+
+- remove useless lastPreview logic ([abcedcc](https://github.com/clctv/termpal/commit/abcedccb88cfdc0d163b87cd1f651c26e4a4557d))
+
+### Features
+
+- add Kanagawa theme ([a5893bb](https://github.com/clctv/termpal/commit/a5893bb9dab0f9f639585d1759cdcc15b7635e5c))
+- remove Monokai,RosePine,NightOwl and add GitHubDark,AyuDark ([f06876e](https://github.com/clctv/termpal/commit/f06876e2a5352ef228283961fbbe3a84a2923893))
+
 # [1.1.0](https://github.com/clctv/termpal/compare/1.0.1...1.1.0) (2026-03-18)
 
 ### Features
