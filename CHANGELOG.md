@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.2](https://github.com/clctv/termpal/compare/1.2.1...1.2.2) (2026-03-26)
+
+### Performance Improvements
+
+- should update ui before onChange ([6254e81](https://github.com/clctv/termpal/commit/6254e811dac177e5d7ffd6d836c942cb2e5bf07c))
+
 ## [1.2.1](https://github.com/clctv/termpal/compare/1.2.0...1.2.1) (2026-03-26)
 
 ### Performance Improvements
