@@ -13,7 +13,7 @@ type SelectChoice<Value, Description = Value> = {
   value: Value
   name?: string
   description?: Description
-  disabled?: boolean | string
+  disabled?: boolean
 }
 
 type SelectConfig<Value, Description = Value> = {
@@ -35,11 +35,12 @@ const ANSI = {
   hideCursor: '\x1b[?25l',
   showCursor: '\x1b[?25h',
   clearLine: '\x1b[2K',
+  clearToScreenEnd: '\x1b[J',
   moveLineStart: '\r',
 }
 
 const isChoiceDisabled = <Value, Description>(choice: SelectChoice<Value, Description>): boolean =>
-  Boolean(choice.disabled)
+  choice.disabled === true
 
 const isEqual = <T>(left: T, right: T): boolean => Object.is(left, right)
 
@@ -48,16 +49,17 @@ const countLines = (content: string): number => {
   return content.split('\n').length
 }
 
-const clearRenderedLines = (lineCount: number): void => {
-  if (lineCount <= 0) return
-
-  for (let line = 0; line < lineCount; line += 1) {
-    process.stdout.write(ANSI.moveLineStart)
-    process.stdout.write(ANSI.clearLine)
-    if (line < lineCount - 1) {
-      process.stdout.write('\x1b[1A')
-    }
+const getRenderPrefix = (lineCount: number): string => {
+  if (lineCount <= 0) return ''
+  if (lineCount === 1) {
+    return `${ANSI.moveLineStart}${ANSI.clearToScreenEnd}`
   }
+  return `\x1b[${lineCount - 1}F${ANSI.clearToScreenEnd}`
+}
+
+const getMoveToTopPrefix = (lineCount: number): string => {
+  if (lineCount <= 1) return ANSI.moveLineStart
+  return `\x1b[${lineCount - 1}F`
 }
 
 const findFirstEnabledIndex = <Value, Description>(
@@ -88,6 +90,13 @@ const findNextEnabledIndex = <Value, Description>(
   }
 
   return currentIndex
+}
+
+const createNextEnabledIndexMap = <Value, Description>(
+  choices: SelectChoice<Value, Description>[],
+  direction: -1 | 1,
+): number[] => {
+  return choices.map((_, index) => findNextEnabledIndex(choices, index, direction))
 }
 
 const getVisibleWindowStart = (
@@ -125,34 +134,59 @@ const formatAnsweredLine = <Value, Description>(
   return `${colors.bold(message)} ${colors.cyan(label)}`
 }
 
+type RenderFrame = {
+  output: string
+  windowStart: number
+  windowEnd: number
+  hasDescription: boolean
+  lineCount: number
+  selectedIndex: number
+}
+
+const renderDescription = <Description>(
+  choice: SelectChoice<unknown, Description>,
+  styleDescription?: SelectStyleRenderer<Description>,
+): string | undefined => {
+  if (choice.description === undefined) return undefined
+  if (styleDescription) return styleDescription(choice.description)
+  return String(choice.description)
+}
+
 const renderPrompt = <Value, Description>(
   message: string,
+  getChoiceLine: (index: number, isSelected: boolean) => string,
   choices: SelectChoice<Value, Description>[],
   selectedIndex: number,
   pageSize: number,
   styleDescription?: SelectStyleRenderer<Description>,
-): { output: string; lines: number } => {
+  renderedDescription?: string,
+): RenderFrame => {
   const outputLines: string[] = [colors.bold(message)]
   const windowStart = getVisibleWindowStart(selectedIndex, choices.length, pageSize)
   const windowEnd = Math.min(windowStart + pageSize, choices.length)
 
   for (let index = windowStart; index < windowEnd; index += 1) {
-    const choice = choices[index]
-    outputLines.push(formatChoiceLine(choice, index === selectedIndex))
+    outputLines.push(getChoiceLine(index, index === selectedIndex))
   }
 
   const selectedChoice = choices[selectedIndex]
-  if (selectedChoice?.description !== undefined && styleDescription) {
-    const styled = styleDescription(selectedChoice.description)
-    if (styled !== '') {
-      outputLines.push(styled)
-    }
-  } else if (selectedChoice?.description !== undefined) {
-    outputLines.push(String(selectedChoice.description))
+  const effectiveDescription =
+    renderedDescription ?? renderDescription(selectedChoice, styleDescription)
+
+  if (effectiveDescription !== undefined && effectiveDescription !== '') {
+    outputLines.push(effectiveDescription)
   }
 
   const output = outputLines.join('\n')
-  return { output, lines: countLines(output) }
+  const hasDescription = effectiveDescription !== undefined && effectiveDescription !== ''
+  return {
+    output,
+    windowStart,
+    windowEnd,
+    hasDescription,
+    lineCount: countLines(output),
+    selectedIndex,
+  }
 }
 
 const select = async <Value, Description = Value>(
@@ -179,11 +213,21 @@ const select = async <Value, Description = Value>(
   return new Promise<Value>((resolve, reject) => {
     const input = process.stdin
     const styleDescription = theme?.style?.description
+    const effectivePageSize = Math.max(1, pageSize)
+    const nextUpIndexMap = createNextEnabledIndexMap(choices, -1)
+    const nextDownIndexMap = createNextEnabledIndexMap(choices, 1)
+    const normalChoiceLines = choices.map((choice) => formatChoiceLine(choice, false))
+    const selectedChoiceLines = choices.map((choice) => formatChoiceLine(choice, true))
+    const getChoiceLine = (index: number, isSelected: boolean): string =>
+      isSelected ? selectedChoiceLines[index] : normalChoiceLines[index]
     let selectedIndex = initialIndex
     let renderedLineCount = 0
+    let lastFrame: RenderFrame | null = null
     const shouldRestoreRawMode = input.isTTY
     const previousRawMode = shouldRestoreRawMode ? input.isRaw : false
     let settled = false
+    let pendingDrawScheduled = false
+    let pendingDrawTask: NodeJS.Immediate | null = null
 
     const cleanup = ({
       clear,
@@ -193,12 +237,17 @@ const select = async <Value, Description = Value>(
       appendNewline: boolean
     }): void => {
       input.removeListener('keypress', onKeypress)
+      if (pendingDrawTask) {
+        clearImmediate(pendingDrawTask)
+        pendingDrawTask = null
+      }
+      pendingDrawScheduled = false
       if (shouldRestoreRawMode) {
         input.setRawMode(previousRawMode)
       }
       input.pause()
       if (clear) {
-        clearRenderedLines(renderedLineCount)
+        process.stdout.write(getRenderPrefix(renderedLineCount))
         renderedLineCount = 0
       }
       process.stdout.write(ANSI.showCursor)
@@ -224,16 +273,86 @@ const select = async <Value, Description = Value>(
     }
 
     const draw = (): void => {
-      clearRenderedLines(renderedLineCount)
+      let selectedRenderedDescription: string | undefined
+      if (lastFrame && lastFrame.selectedIndex !== selectedIndex) {
+        const nextWindowStart = getVisibleWindowStart(
+          selectedIndex,
+          choices.length,
+          effectivePageSize,
+        )
+        const nextWindowEnd = Math.min(nextWindowStart + effectivePageSize, choices.length)
+        selectedRenderedDescription = renderDescription(choices[selectedIndex], styleDescription)
+        const nextHasDescription =
+          selectedRenderedDescription !== undefined && selectedRenderedDescription !== ''
+        if (
+          !lastFrame.hasDescription &&
+          !nextHasDescription &&
+          lastFrame.windowStart === nextWindowStart &&
+          lastFrame.windowEnd === nextWindowEnd
+        ) {
+          const previousIndex = lastFrame.selectedIndex
+          const previousRow = 1 + (previousIndex - nextWindowStart)
+          const currentRow = 1 + (selectedIndex - nextWindowStart)
+          if (previousRow === currentRow) {
+            lastFrame = {
+              ...lastFrame,
+              selectedIndex,
+            }
+            return
+          }
+
+          const firstRow = Math.min(previousRow, currentRow)
+          const secondRow = Math.max(previousRow, currentRow)
+          let output = getMoveToTopPrefix(renderedLineCount)
+          let currentRowOffset = 0
+          for (const row of [firstRow, secondRow]) {
+            const rowOffset = row - currentRowOffset
+            if (rowOffset > 0) {
+              output += `\x1b[${rowOffset}E`
+            }
+            const choiceIndex = nextWindowStart + row - 1
+            const isSelected = choiceIndex === selectedIndex
+            output += `${ANSI.clearLine}${getChoiceLine(choiceIndex, isSelected)}`
+            currentRowOffset = row
+          }
+
+          if (currentRowOffset < renderedLineCount - 1) {
+            output += `\x1b[${renderedLineCount - 1 - currentRowOffset}E`
+          }
+
+          process.stdout.write(output)
+          lastFrame = {
+            ...lastFrame,
+            selectedIndex,
+          }
+          return
+        }
+      }
+
       const rendered = renderPrompt(
         message,
+        getChoiceLine,
         choices,
         selectedIndex,
-        Math.max(1, pageSize),
+        effectivePageSize,
         styleDescription,
+        selectedRenderedDescription,
       )
-      renderedLineCount = rendered.lines
-      process.stdout.write(rendered.output)
+      const clearOutput = getRenderPrefix(renderedLineCount)
+      renderedLineCount = rendered.lineCount
+      process.stdout.write(`${clearOutput}${rendered.output}`)
+      lastFrame = { ...rendered, selectedIndex }
+    }
+
+    const requestDraw = (): void => {
+      if (pendingDrawScheduled || settled) return
+      pendingDrawScheduled = true
+      pendingDrawTask = setImmediate(() => {
+        pendingDrawTask = null
+        pendingDrawScheduled = false
+        if (settled) return
+        draw()
+      })
     }
 
     const onKeypress = (_str: string, key: { name?: string; ctrl?: boolean }): void => {
@@ -253,14 +372,18 @@ const select = async <Value, Description = Value>(
       }
 
       if (key.name === 'up' || key.name === 'k') {
-        selectedIndex = findNextEnabledIndex(choices, selectedIndex, -1)
-        draw()
+        const nextIndex = nextUpIndexMap[selectedIndex]
+        if (nextIndex === selectedIndex) return
+        selectedIndex = nextIndex
+        requestDraw()
         return
       }
 
       if (key.name === 'down' || key.name === 'j') {
-        selectedIndex = findNextEnabledIndex(choices, selectedIndex, 1)
-        draw()
+        const nextIndex = nextDownIndexMap[selectedIndex]
+        if (nextIndex === selectedIndex) return
+        selectedIndex = nextIndex
+        requestDraw()
       }
     }
 
