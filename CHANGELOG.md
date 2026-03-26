@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.1](https://github.com/clctv/termpal/compare/1.2.0...1.2.1) (2026-03-26)
+
+### Performance Improvements
+
+- optimize select performance ([30c6059](https://github.com/clctv/termpal/commit/30c6059fa59fb2ad47ac048d50b4dc089a5bed4c))
+
 # [1.2.0](https://github.com/clctv/termpal/compare/1.1.0...1.2.0) (2026-03-19)
 
 ### Bug Fixes
