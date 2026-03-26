@@ -215,17 +215,11 @@ const run = async () => {
         value: themeName,
         name:
           themeName === currentSelection ? `${themeName} ${colors.dim('(current)')}` : themeName,
-        description: themeName,
       })),
       pageSize: themeNames.length,
       default: currentSelection,
-      theme: {
-        style: {
-          description: (next) => {
-            applySelection(next)
-            return ''
-          },
-        },
+      onChange: (nextChoice) => {
+        applySelection(nextChoice.value)
       },
     })
     writePersistedSelection(selected)

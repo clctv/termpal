@@ -1,27 +1,20 @@
 import { emitKeypressEvents } from 'node:readline'
 import colors from 'picocolors'
 
-type SelectStyleRenderer<T> = (value: T) => string
-
-type SelectTheme<T> = {
-  style?: {
-    description?: SelectStyleRenderer<T>
-  }
-}
-
-type SelectChoice<Value, Description = Value> = {
+type SelectChoice<Value> = {
   value: Value
   name?: string
-  description?: Description
   disabled?: boolean
 }
 
-type SelectConfig<Value, Description = Value> = {
+type SelectOnChange<Value> = (choice: SelectChoice<Value>) => void
+
+type SelectConfig<Value> = {
   message: string
-  choices: SelectChoice<Value, Description>[]
+  choices: SelectChoice<Value>[]
   default?: Value
   pageSize?: number
-  theme?: SelectTheme<Description>
+  onChange?: SelectOnChange<Value>
 }
 
 class ExitPromptError extends Error {
@@ -39,15 +32,9 @@ const ANSI = {
   moveLineStart: '\r',
 }
 
-const isChoiceDisabled = <Value, Description>(choice: SelectChoice<Value, Description>): boolean =>
-  choice.disabled === true
+const isChoiceDisabled = <Value>(choice: SelectChoice<Value>): boolean => choice.disabled === true
 
 const isEqual = <T>(left: T, right: T): boolean => Object.is(left, right)
-
-const countLines = (content: string): number => {
-  if (content === '') return 0
-  return content.split('\n').length
-}
 
 const getRenderPrefix = (lineCount: number): string => {
   if (lineCount <= 0) return ''
@@ -62,12 +49,11 @@ const getMoveToTopPrefix = (lineCount: number): string => {
   return `\x1b[${lineCount - 1}F`
 }
 
-const findFirstEnabledIndex = <Value, Description>(
-  choices: SelectChoice<Value, Description>[],
-): number => choices.findIndex((choice) => !isChoiceDisabled(choice))
+const findFirstEnabledIndex = <Value>(choices: SelectChoice<Value>[]): number =>
+  choices.findIndex((choice) => !isChoiceDisabled(choice))
 
-const findDefaultIndex = <Value, Description>(
-  choices: SelectChoice<Value, Description>[],
+const findDefaultIndex = <Value>(
+  choices: SelectChoice<Value>[],
   defaultValue: Value | undefined,
 ): number => {
   if (defaultValue === undefined) return -1
@@ -76,27 +62,43 @@ const findDefaultIndex = <Value, Description>(
   )
 }
 
-const findNextEnabledIndex = <Value, Description>(
-  choices: SelectChoice<Value, Description>[],
-  currentIndex: number,
-  direction: -1 | 1,
-): number => {
-  if (choices.length === 0) return -1
-  let nextIndex = currentIndex
-
-  for (let attempt = 0; attempt < choices.length; attempt += 1) {
-    nextIndex = (nextIndex + direction + choices.length) % choices.length
-    if (!isChoiceDisabled(choices[nextIndex])) return nextIndex
-  }
-
-  return currentIndex
-}
-
-const createNextEnabledIndexMap = <Value, Description>(
-  choices: SelectChoice<Value, Description>[],
+const createNextEnabledIndexMap = <Value>(
+  choices: SelectChoice<Value>[],
   direction: -1 | 1,
 ): number[] => {
-  return choices.map((_, index) => findNextEnabledIndex(choices, index, direction))
+  const enabledIndices: number[] = []
+  for (let index = 0; index < choices.length; index += 1) {
+    if (!isChoiceDisabled(choices[index])) {
+      enabledIndices.push(index)
+    }
+  }
+
+  if (enabledIndices.length === 0) {
+    return choices.map(() => -1)
+  }
+
+  const map: number[] = Array.from({ length: choices.length })
+  if (direction === 1) {
+    let enabledCursor = 0
+    for (let index = 0; index < choices.length; index += 1) {
+      while (enabledCursor < enabledIndices.length && enabledIndices[enabledCursor] <= index) {
+        enabledCursor += 1
+      }
+      map[index] =
+        enabledCursor < enabledIndices.length ? enabledIndices[enabledCursor] : enabledIndices[0]
+    }
+    return map
+  }
+
+  let enabledCursor = enabledIndices.length - 1
+  for (let index = choices.length - 1; index >= 0; index -= 1) {
+    while (enabledCursor >= 0 && enabledIndices[enabledCursor] >= index) {
+      enabledCursor -= 1
+    }
+    map[index] =
+      enabledCursor >= 0 ? enabledIndices[enabledCursor] : enabledIndices[enabledIndices.length - 1]
+  }
+  return map
 }
 
 const getVisibleWindowStart = (
@@ -111,10 +113,7 @@ const getVisibleWindowStart = (
   return Math.max(0, Math.min(start, maxStart))
 }
 
-const formatChoiceLine = <Value, Description>(
-  choice: SelectChoice<Value, Description>,
-  isSelected: boolean,
-): string => {
+const formatChoiceLine = <Value>(choice: SelectChoice<Value>, isSelected: boolean): string => {
   const cursor = isSelected ? colors.cyan('❯') : ' '
   const label = choice.name ?? String(choice.value)
   if (isChoiceDisabled(choice)) {
@@ -126,10 +125,7 @@ const formatChoiceLine = <Value, Description>(
   return `${cursor} ${label}`
 }
 
-const formatAnsweredLine = <Value, Description>(
-  message: string,
-  choice: SelectChoice<Value, Description>,
-): string => {
+const formatAnsweredLine = <Value>(message: string, choice: SelectChoice<Value>): string => {
   const label = choice.name ?? String(choice.value)
   return `${colors.bold(message)} ${colors.cyan(label)}`
 }
@@ -138,61 +134,37 @@ type RenderFrame = {
   output: string
   windowStart: number
   windowEnd: number
-  hasDescription: boolean
   lineCount: number
   selectedIndex: number
 }
 
-const renderDescription = <Description>(
-  choice: SelectChoice<unknown, Description>,
-  styleDescription?: SelectStyleRenderer<Description>,
-): string | undefined => {
-  if (choice.description === undefined) return undefined
-  if (styleDescription) return styleDescription(choice.description)
-  return String(choice.description)
-}
-
-const renderPrompt = <Value, Description>(
+const renderPrompt = (
   message: string,
   getChoiceLine: (index: number, isSelected: boolean) => string,
-  choices: SelectChoice<Value, Description>[],
   selectedIndex: number,
   pageSize: number,
-  styleDescription?: SelectStyleRenderer<Description>,
-  renderedDescription?: string,
+  choiceCount: number,
 ): RenderFrame => {
   const outputLines: string[] = [colors.bold(message)]
-  const windowStart = getVisibleWindowStart(selectedIndex, choices.length, pageSize)
-  const windowEnd = Math.min(windowStart + pageSize, choices.length)
+  const windowStart = getVisibleWindowStart(selectedIndex, choiceCount, pageSize)
+  const windowEnd = Math.min(windowStart + pageSize, choiceCount)
 
   for (let index = windowStart; index < windowEnd; index += 1) {
     outputLines.push(getChoiceLine(index, index === selectedIndex))
   }
 
-  const selectedChoice = choices[selectedIndex]
-  const effectiveDescription =
-    renderedDescription ?? renderDescription(selectedChoice, styleDescription)
-
-  if (effectiveDescription !== undefined && effectiveDescription !== '') {
-    outputLines.push(effectiveDescription)
-  }
-
   const output = outputLines.join('\n')
-  const hasDescription = effectiveDescription !== undefined && effectiveDescription !== ''
   return {
     output,
     windowStart,
     windowEnd,
-    hasDescription,
-    lineCount: countLines(output),
+    lineCount: 1 + (windowEnd - windowStart),
     selectedIndex,
   }
 }
 
-const select = async <Value, Description = Value>(
-  config: SelectConfig<Value, Description>,
-): Promise<Value> => {
-  const { message, choices, default: defaultValue, pageSize = 7, theme } = config
+const select = async <Value>(config: SelectConfig<Value>): Promise<Value> => {
+  const { message, choices, default: defaultValue, pageSize = 7, onChange } = config
 
   if (choices.length === 0) {
     throw new Error('Select prompt requires at least one choice.')
@@ -207,12 +179,12 @@ const select = async <Value, Description = Value>(
   const initialIndex = defaultIndex >= 0 ? defaultIndex : firstEnabledIndex
 
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    onChange?.(choices[initialIndex])
     return choices[initialIndex].value
   }
 
   return new Promise<Value>((resolve, reject) => {
     const input = process.stdin
-    const styleDescription = theme?.style?.description
     const effectivePageSize = Math.max(1, pageSize)
     const nextUpIndexMap = createNextEnabledIndexMap(choices, -1)
     const nextDownIndexMap = createNextEnabledIndexMap(choices, 1)
@@ -228,6 +200,7 @@ const select = async <Value, Description = Value>(
     let settled = false
     let pendingDrawScheduled = false
     let pendingDrawTask: NodeJS.Immediate | null = null
+    let lastNotifiedIndex: number | null = null
 
     const cleanup = ({
       clear,
@@ -272,8 +245,17 @@ const select = async <Value, Description = Value>(
       reject(error)
     }
 
+    const notifySelectionChange = (): void => {
+      if (!onChange || lastNotifiedIndex === selectedIndex) return
+      lastNotifiedIndex = selectedIndex
+      try {
+        onChange(choices[selectedIndex])
+      } catch (error) {
+        settleReject(error instanceof Error ? error : new Error(String(error)))
+      }
+    }
+
     const draw = (): void => {
-      let selectedRenderedDescription: string | undefined
       if (lastFrame && lastFrame.selectedIndex !== selectedIndex) {
         const nextWindowStart = getVisibleWindowStart(
           selectedIndex,
@@ -281,26 +263,10 @@ const select = async <Value, Description = Value>(
           effectivePageSize,
         )
         const nextWindowEnd = Math.min(nextWindowStart + effectivePageSize, choices.length)
-        selectedRenderedDescription = renderDescription(choices[selectedIndex], styleDescription)
-        const nextHasDescription =
-          selectedRenderedDescription !== undefined && selectedRenderedDescription !== ''
-        if (
-          !lastFrame.hasDescription &&
-          !nextHasDescription &&
-          lastFrame.windowStart === nextWindowStart &&
-          lastFrame.windowEnd === nextWindowEnd
-        ) {
+        if (lastFrame.windowStart === nextWindowStart && lastFrame.windowEnd === nextWindowEnd) {
           const previousIndex = lastFrame.selectedIndex
           const previousRow = 1 + (previousIndex - nextWindowStart)
           const currentRow = 1 + (selectedIndex - nextWindowStart)
-          if (previousRow === currentRow) {
-            lastFrame = {
-              ...lastFrame,
-              selectedIndex,
-            }
-            return
-          }
-
           const firstRow = Math.min(previousRow, currentRow)
           const secondRow = Math.max(previousRow, currentRow)
           let output = getMoveToTopPrefix(renderedLineCount)
@@ -332,11 +298,9 @@ const select = async <Value, Description = Value>(
       const rendered = renderPrompt(
         message,
         getChoiceLine,
-        choices,
         selectedIndex,
         effectivePageSize,
-        styleDescription,
-        selectedRenderedDescription,
+        choices.length,
       )
       const clearOutput = getRenderPrefix(renderedLineCount)
       renderedLineCount = rendered.lineCount
@@ -350,6 +314,8 @@ const select = async <Value, Description = Value>(
       pendingDrawTask = setImmediate(() => {
         pendingDrawTask = null
         pendingDrawScheduled = false
+        if (settled) return
+        notifySelectionChange()
         if (settled) return
         draw()
       })
@@ -394,6 +360,8 @@ const select = async <Value, Description = Value>(
     }
     input.resume()
     input.on('keypress', onKeypress)
+    notifySelectionChange()
+    if (settled) return
     draw()
   })
 }
