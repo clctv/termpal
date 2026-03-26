@@ -315,9 +315,8 @@ const select = async <Value>(config: SelectConfig<Value>): Promise<Value> => {
         pendingDrawTask = null
         pendingDrawScheduled = false
         if (settled) return
-        notifySelectionChange()
-        if (settled) return
         draw()
+        notifySelectionChange()
       })
     }
 
@@ -360,9 +359,8 @@ const select = async <Value>(config: SelectConfig<Value>): Promise<Value> => {
     }
     input.resume()
     input.on('keypress', onKeypress)
-    notifySelectionChange()
-    if (settled) return
     draw()
+    notifySelectionChange()
   })
 }
 
